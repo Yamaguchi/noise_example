@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-describe Noiseexample do
+describe Noise::Example do
   it 'has a version number' do
-    expect(Noiseexample::VERSION).not_to be nil
+    expect(Noise::Example::VERSION).not_to be nil
   end
 
   it 'does something useful' do
