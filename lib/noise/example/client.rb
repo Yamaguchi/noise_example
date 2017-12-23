@@ -38,8 +38,8 @@ module Noise::Example
           conn&.send_data(data)
         end), (on ~Received do |msg|
           @transport << msg
-        end), (on HandshakeCompleted do
-          log(Logger::DEBUG, 'Handshake Completed!')
+        end), (on HandshakeCompleted.(any, ~any) do |remote_key|
+          log(Logger::DEBUG, "Handshake Completed! #{remote_key.bth}")
           @status = Status::CONNECT
         end)
       when Status::CONNECT
@@ -71,6 +71,10 @@ module Noise::Example
 
     def unbind(reason = nil)
       log(Logger::DEBUG, '/client', "unbind #{reason}")
+    end
+
+    def to_s
+      'Noise::Example::ClientConnection'
     end
   end
 end

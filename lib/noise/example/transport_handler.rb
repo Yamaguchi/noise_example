@@ -47,16 +47,18 @@ module Noise::Example
             throw "invalid transport prefix #{@buffer[0]}" unless @buffer[0] == PREFIX
             payload = @buffer[1..expected_length(@connection)]
             remainder = @buffer[expected_length(@connection)..-1]
-
             _ = @connection.read_message(payload)
+
             if @connection.handshake_finished
-              reference.parent << HandshakeCompleted[conn]
+              rs = @connection.protocol.keypairs[:rs][1]
+              reference.parent << HandshakeCompleted[conn, rs]
               @status = Status::WAITING_FOR_LISTENER
             else
               payload = @connection.write_message('')
               reference.parent << Message[PREFIX + payload, conn]
               if @connection.handshake_finished
-                reference.parent << HandshakeCompleted[conn]
+                rs = @connection.protocol.keypairs[:rs][1]
+                reference.parent << HandshakeCompleted[conn, rs]
                 @status = Status::WAITING_FOR_LISTENER
               end
             end

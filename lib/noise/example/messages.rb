@@ -6,7 +6,7 @@ module Noise::Example
       variants  Connected = type { fields! conn: Object },
                 Message = type { fields! data: String, conn: Object },
                 Received = type { fields! data: String, conn: Object },
-                HandshakeCompleted = type { fields! conn: Object }
+                HandshakeCompleted = type { fields! conn: Object, remote_key: String }
     end
 
     module Message

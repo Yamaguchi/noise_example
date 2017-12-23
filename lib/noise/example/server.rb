@@ -21,8 +21,8 @@ module Noise::Example
         conn.transport = TransportHandler.spawn(:transport, @static_key, @ephemeral_key)
       end), (on Message.(~any, ~any) do |data, conn|
         conn&.send_data(data)
-      end), (on HandshakeCompleted do
-        log(Logger::DEBUG, 'Handshake Completed!')
+      end), (on HandshakeCompleted.(any, ~any) do |remote_key|
+        log(Logger::DEBUG, "Handshake Completed! #{remote_key.bth}")
       end)
     end
   end
@@ -55,6 +55,10 @@ module Noise::Example
 
     def unbind(reason = nil)
       log(Logger::DEBUG, '/server', "unbind #{reason}")
+    end
+
+    def to_s
+      'Noise::Example::ServerConnection'
     end
   end
 end
