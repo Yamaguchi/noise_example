@@ -62,11 +62,13 @@ end
 sleep(1)
 
 EM.run do
-  Noise::Example::Client.connect(
+  client = Noise::Example::Client.connect(
     '127.0.0.1',
     9735,
     initiator_static_key,
     initiator_ephemeral_key,
     remote_static_key
   )
+  sleep(1)
+  client << Noise::Example::Messages::Message['hello']
 end

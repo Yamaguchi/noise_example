@@ -19,10 +19,11 @@ module Noise::Example
     def on_message(message)
       match message, (on Connected.(~any) do |conn|
         conn.transport = TransportHandler.spawn(:transport, @static_key, @ephemeral_key)
-      end), (on Message.(~any, ~any) do |data, conn|
+      end), (on Act.(~any, ~any) do |data, conn|
         conn&.send_data(data)
-      end), (on HandshakeCompleted.(any, ~any) do |remote_key|
+      end), (on HandshakeCompleted.(~any, ~any, ~any) do |transport, conn, remote_key|
         log(Logger::DEBUG, "Handshake Completed! #{remote_key.bth}")
+        transport << Listener[nil]
       end)
     end
   end

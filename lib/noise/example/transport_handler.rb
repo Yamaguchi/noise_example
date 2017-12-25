@@ -38,7 +38,7 @@ module Noise::Example
       when Status::HANDSHAKE
         match message, (on Connected.(~any) do |conn|
           payload = @connection.write_message('')
-          reference.parent << Message[PREFIX + payload, conn]
+          reference.parent << Act[PREFIX + payload, conn]
         end), (on Received.(~any, ~any) do |data, conn|
           @buffer += data
           if @buffer.bytesize < expected_length(@connection)
@@ -49,25 +49,48 @@ module Noise::Example
             remainder = @buffer[expected_length(@connection)..-1]
             _ = @connection.read_message(payload)
 
+            unless @connection.handshake_finished
+              payload = @connection.write_message('')
+              reference.parent << Act[PREFIX + payload, conn]
+            end
+
             if @connection.handshake_finished
               rs = @connection.protocol.keypairs[:rs][1]
-              reference.parent << HandshakeCompleted[conn, rs]
+              reference.parent << HandshakeCompleted[self, conn, rs]
               @status = Status::WAITING_FOR_LISTENER
-            else
-              payload = @connection.write_message('')
-              reference.parent << Message[PREFIX + payload, conn]
-              if @connection.handshake_finished
-                rs = @connection.protocol.keypairs[:rs][1]
-                reference.parent << HandshakeCompleted[conn, rs]
-                @status = Status::WAITING_FOR_LISTENER
-              end
             end
             @buffer = remainder
           end
         end)
       when Status::WAITING_FOR_LISTENER
+        match message, (on Received.(~any, ~any) do |data, conn|
+          @buffer += data
+        end), (on Listener.(~any) do |listener|
+          plaintext, remainder = decrypt(@buffer) unless @buffer.empty?
+          # send_to(listener, plaintext)
+          @buffer = remainder || +''
+          @status = Status::WAITING_FOR_CYPHERTEXT
+        end)
       when Status::WAITING_FOR_CYPHERTEXT
+        match message, (on Received.(~any, ~any) do |data, conn|
+          @buffer += data
+          plaintext, remainder = decrypt(@buffer)
+          log(Logger::DEBUG, "message received! #{plaintext.bth}")
+          # send_to(listener, plaintext)
+          @buffer = remainder || +''
+        end), (on Message.(~any) do |data|
+          ciphertext = encrypt(data)
+          reference.parent << Send[ciphertext]
+        end)
       end
+    end
+
+    def encrypt(data)
+      ciphertext = @connection.encrypt(data)
+    end
+
+    def decrypt(buffer)
+      @connection.decrypt(buffer)
     end
 
     def expected_length(connection)

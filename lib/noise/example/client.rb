@@ -34,16 +34,22 @@ module Noise::Example
           @status = Status::AUTHENTICATING
         end)
       when Status::AUTHENTICATING
-        match message, (on Message.(~any, ~any) do |data, conn|
+        match message, (on Act.(~any, ~any) do |data, conn|
           conn&.send_data(data)
         end), (on ~Received do |msg|
           @transport << msg
-        end), (on HandshakeCompleted.(any, ~any) do |remote_key|
+        end), (on HandshakeCompleted.(~any, ~any, ~any) do |transport, conn, remote_key|
           log(Logger::DEBUG, "Handshake Completed! #{remote_key.bth}")
+          transport << Listener[nil]
+          @conn = conn
           @status = Status::CONNECT
         end)
       when Status::CONNECT
-        log(Logger::DEBUG, 'Status::CONNECT')
+        match message, (on ~Message do |msg|
+          @transport << msg
+        end), (on Send.(~any) do |ciphertext|
+          @conn&.send_data(ciphertext)
+        end)
       end
     end
   end
