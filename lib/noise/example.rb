@@ -8,8 +8,6 @@ require 'concurrent-edge'
 require 'eventmachine'
 require 'noise'
 
-require 'pry'
-
 module Noise
   module Example
     autoload :Client, 'noise/example/client'
