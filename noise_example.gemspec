@@ -28,6 +28,6 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'concurrent-ruby'
   spec.add_runtime_dependency 'concurrent-ruby-edge'
   spec.add_runtime_dependency 'eventmachine'
-  spec.add_runtime_dependency 'noise-ruby'
+  spec.add_runtime_dependency 'noise-ruby', '>= 0.7.4'
   spec.add_runtime_dependency 'secp256k1-ruby'
 end

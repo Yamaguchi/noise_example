@@ -52,7 +52,7 @@ module Noise
               end
 
               if @connection.handshake_finished
-                rs = @connection.protocol.keypairs[:rs][1]
+                rs = @connection.rs
                 reference.parent << HandshakeCompleted[self, conn, rs]
                 @status = Status::WAITING_FOR_LISTENER
               end
@@ -91,7 +91,7 @@ module Noise
       end
 
       def expected_length(connection)
-        case connection.protocol.handshake_state.message_patterns.length
+        case connection.handshake_state.message_patterns.length
         when 1 then 66
         when 2, 3 then 50
         end
@@ -102,21 +102,14 @@ module Noise
       end
 
       def make_writer
-        initiator = Noise::Connection.new('Noise_XK_secp256k1_ChaChaPoly_SHA256')
+        initiator = Noise::Connection::Initiator.new('Noise_XK_secp256k1_ChaChaPoly_SHA256', keypairs: {s: @static_key[0], e: @ephemeral_key[0], rs: @remote_key})
         initiator.prologue = PROLOGUE
-        initiator.set_as_initiator!
-        initiator.set_keypair_from_private(Noise::KeyPair::STATIC, @static_key[0])
-        initiator.set_keypair_from_private(Noise::KeyPair::EPHEMERAL, @ephemeral_key[0])
-        initiator.set_keypair_from_public(Noise::KeyPair::REMOTE_STATIC, @remote_key)
         initiator
       end
 
       def make_reader
-        responder = Noise::Connection.new('Noise_XK_secp256k1_ChaChaPoly_SHA256')
+        responder = Noise::Connection::Responder.new('Noise_XK_secp256k1_ChaChaPoly_SHA256', keypairs: {s: @static_key[0], e: @ephemeral_key[0]})
         responder.prologue = PROLOGUE
-        responder.set_as_responder!
-        responder.set_keypair_from_private(Noise::KeyPair::STATIC, @static_key[0])
-        responder.set_keypair_from_private(Noise::KeyPair::EPHEMERAL, @ephemeral_key[0])
         responder
       end
     end
